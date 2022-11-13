@@ -41,12 +41,13 @@ def build_mbedtls(cmake_args):
         # do('cp -r ../mbedtls mbedtls', shell=True)
         do('git checkout {}'.format(MBEDTLS_REV), shell=True, cwd='mbedtls')
     cwd = 'mbedtls/build'
-    os.mkdir(cwd)
+    os.makedirs(cwd, exist_ok=True)
     cmake_cmd = ['cmake'] + cmake_args
     cmake_cmd += [
         '-DENABLE_PROGRAMS=OFF',
         '-DCMAKE_BUILD_TYPE=Release',
         '-DCMAKE_INSTALL_PREFIX=../prefix',
+        '-DENABLE_TESTING=OFF'
         '..'
     ]
     print('building mbedtls with:', cmake_cmd)
