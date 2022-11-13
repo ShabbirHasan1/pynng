@@ -102,14 +102,22 @@ def build_libs():
     flags = ['-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true']
     is_64bit = sys.maxsize > 2**32
     if WINDOWS:
-        if is_64bit:
-            flags += ['-A', 'x64']
-        else:
-            flags += ['-A', 'win32']
+        # if ninja is present we'll try to use it
 
-    if shutil.which('ninja'):
-        # the ninja build generator is a million times faster.
-        flags += ['-G', 'Ninja']
+        # It is a prerequisite to have the environment already set up for
+        # Ninja; can't specifiy architecture on command line
+        if shutil.which('ninja'):
+            # the ninja build generator is a million times faster.
+            flags += ['-G', 'Ninja']
+        else:
+            if is_64bit:
+                flags += ['-A', 'x64']
+            else:
+                flags += ['-A', 'win32']
+    else:
+        if shutil.which('ninja'):
+            # the ninja build generator is a million times faster.
+            flags += ['-G', 'Ninja']
     build_mbedtls(flags)
     build_nng(flags)
 
