@@ -88,6 +88,8 @@ def build_nng(cmake_args):
         shell=True,
         cwd='nng/build',
     )
+    print(os.listdir('nng/build'))
+
 
 
 def build_libs():
