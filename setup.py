@@ -81,7 +81,7 @@ def build_nng(cmake_args):
         '-DMBEDTLS_ROOT_DIR={}/mbedtls/prefix/'.format(THIS_DIR),
         '..',
     ]
-    print('building mbedtls with:', cmake_cmd)
+    print('building nng with:', cmake_cmd)
     do(cmake_cmd, cwd='nng/build')
     do(
         'cmake --build . --config Release',
