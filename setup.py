@@ -28,6 +28,9 @@ def _rmdir(dirname):
         cmd = ['rm', '-rf', dirname]
     return check_call(cmd)
 
+def maybe_copy(src, dst):
+    if os.path.exists(src):
+        shutil.copy(src, dst)
 
 def build_mbedtls(cmake_args):
     """
@@ -57,6 +60,12 @@ def build_mbedtls(cmake_args):
         shell=True,
         cwd=cwd,
     )
+    if WINDOWS:
+        # CI build artifacts have the wrong extension
+        mb = 'mbedtls/build/library/'
+        maybe_copy(mb + 'libmbedtls.a', mb + 'mbedtls.lib')
+        maybe_copy(mb + 'libmbedx509.a', mb + 'mbedx509.lib')
+        maybe_copy(mb + 'libmbedcrypto.a', mb + 'mbedcrypto.lib')
 
 
 def build_nng(cmake_args):
@@ -88,6 +97,10 @@ def build_nng(cmake_args):
         shell=True,
         cwd='nng/build',
     )
+    if WINDOWS:
+        # madness: for some reason in CI, a file that follows the Linux convention is
+        # getting created
+        maybe_copy('nng/build/libnng.a', '/nng/build/nng.lib')
     print(os.listdir('nng/build'))
 
 
