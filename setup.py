@@ -71,7 +71,7 @@ def build_nng(cmake_args):
         # for local hacking, just copy a directory (network connection is slow)
         # do('cp -r ../nng-clean nng', shell=True)
         do('git checkout {}'.format(NNG_REV), shell=True, cwd='nng')
-    os.mkdir('nng/build')
+    os.makedirs('nng/build', exist_ok=True)
     cmake_cmd = ['cmake'] + cmake_args
     cmake_cmd += [
         '-DNNG_ENABLE_TLS=ON',
