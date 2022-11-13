@@ -5,19 +5,29 @@
 # to see what the expected object file is based on the platform.
 from cffi import FFI
 import os
+import shutil
 import sys
 
 ffibuilder = FFI()
 
 if sys.platform == 'win32':
-    objects = ['./nng/build/Release/nng.lib']
+    objects = []
+    # we detect ninja in the setup script; ninja and plain ol' Visual Studio put the
+    # build artifacts in different places.  Kind of annoying.  Maybe it would be better
+    # to modify where ninja puts its artifacts?
+    if shutil.which('ninja'):
+        objects.append('./nng/build/nng.lib')
+        mbedtls_dir = './mbedtls/build/library'
+    else:
+        objects.append('./nng/build/Release/nng.lib')
+        mbedtls_dir = './mbedtls/build/library/Release'
 
-    mbedtls_dir = './mbedtls/build/library/Release'
     objects += [
         mbedtls_dir + "/mbedtls.lib",
         mbedtls_dir + "/mbedx509.lib",
         mbedtls_dir + "/mbedcrypto.lib",
     ]
+
 
     # system libraries determined to be necessary through trial and error
     libraries = ['Ws2_32', 'Advapi32']
