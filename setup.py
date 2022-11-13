@@ -47,7 +47,7 @@ def build_mbedtls(cmake_args):
         '-DENABLE_PROGRAMS=OFF',
         '-DCMAKE_BUILD_TYPE=Release',
         '-DCMAKE_INSTALL_PREFIX=../prefix',
-        '-DENABLE_TESTING=OFF'
+        '-DENABLE_TESTING=OFF',
         '..'
     ]
     print('building mbedtls with:', cmake_cmd)
