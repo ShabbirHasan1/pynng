@@ -1,10 +1,19 @@
 import os
 from subprocess import check_call
+import platform
 import shutil
 import sys
 
 import setuptools.command.build_py
 import setuptools.command.build_ext
+
+WINDOWS = sys.platform == 'win32'
+
+if WINDOWS:
+    BUILD_PREFIX = f'build_{platform.machine()}_{platform.python_version()}'
+else:
+    BUILD_PREFIX = 'build'
+
 
 # have to exec; can't import the package before it's built.
 exec(open("pynng/_version.py", encoding="utf-8").read())
@@ -16,9 +25,6 @@ NNG_REPO = 'https://github.com/nanomsg/nng'
 NNG_REV = '4f5e11c391c4a8f1b2731aee5ad47bc0c925042a'
 MBEDTLS_REPO = 'https://github.com/ARMmbed/mbedtls.git'
 MBEDTLS_REV = '04a049bda1ceca48060b57bc4bcf5203ce591421'
-
-WINDOWS = sys.platform == 'win32'
-
 
 def _rmdir(dirname):
     # we can't use shutil.rmtree because it won't delete readonly files.
@@ -43,7 +49,7 @@ def build_mbedtls(cmake_args):
         # for local hacking, just copy a directory (network connection is slow)
         # do('cp -r ../mbedtls mbedtls', shell=True)
         do('git checkout {}'.format(MBEDTLS_REV), shell=True, cwd='mbedtls')
-    cwd = 'mbedtls/build'
+    cwd = f'mbedtls/{BUILD_PREFIX}'
     os.makedirs(cwd, exist_ok=True)
     cmake_cmd = ['cmake'] + cmake_args
     cmake_cmd += [
@@ -62,7 +68,7 @@ def build_mbedtls(cmake_args):
     )
     if WINDOWS:
         # CI build artifacts have the wrong extension
-        mb = 'mbedtls/build/library/'
+        mb = f'mbedtls/{BUILD_PREFIX}/library/'
         maybe_copy(mb + 'libmbedtls.a', mb + 'mbedtls.lib')
         maybe_copy(mb + 'libmbedx509.a', mb + 'mbedx509.lib')
         maybe_copy(mb + 'libmbedcrypto.a', mb + 'mbedcrypto.lib')
@@ -80,7 +86,8 @@ def build_nng(cmake_args):
         # for local hacking, just copy a directory (network connection is slow)
         # do('cp -r ../nng-clean nng', shell=True)
         do('git checkout {}'.format(NNG_REV), shell=True, cwd='nng')
-    os.makedirs('nng/build', exist_ok=True)
+    nng_build_dir = f'nng/{BUILD_PREFIX}'
+    os.makedirs(nng_build_dir, exist_ok=True)
     cmake_cmd = ['cmake'] + cmake_args
     cmake_cmd += [
         '-DNNG_ENABLE_TLS=ON',
@@ -91,17 +98,17 @@ def build_nng(cmake_args):
         '..',
     ]
     print('building nng with:', cmake_cmd)
-    do(cmake_cmd, cwd='nng/build')
+    do(cmake_cmd, cwd=nng_build_dir)
     do(
         'cmake --build . --config Release',
         shell=True,
-        cwd='nng/build',
+        cwd=nng_build_dir,
     )
     if WINDOWS:
         # madness: for some reason in CI, a file that follows the Linux convention is
         # getting created
-        maybe_copy('nng/build/libnng.a', 'nng/build/nng.lib')
-    print(os.listdir('nng/build'))
+        maybe_copy(f'nng/{BUILD_PREFIX}/libnng.a', 'nng/{BUILD_PREFIX}/nng.lib')
+    print(os.listdir(nng_build_dir))
 
 
 
@@ -207,7 +214,7 @@ setuptools.setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: System :: Networking',
     ]),
-    setup_requires=['cffi', 'pytest-runner'],
+    setup_requires=['cffi', 'pytest-runner',],
     install_requires=['cffi', 'sniffio'],
     cffi_modules=['build_pynng.py:ffibuilder'],
     tests_require=tests_require,

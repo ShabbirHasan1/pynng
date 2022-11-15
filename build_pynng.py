@@ -5,8 +5,16 @@
 # to see what the expected object file is based on the platform.
 from cffi import FFI
 import os
-import shutil
+import platform
 import sys
+
+WINDOWS = sys.platform == 'win32'
+
+if WINDOWS:
+    BUILD_PREFIX = f'build_{platform.machine()}_{platform.python_version()}'
+else:
+    BUILD_PREFIX = 'build'
+
 
 ffibuilder = FFI()
 
@@ -15,9 +23,9 @@ if sys.platform == 'win32':
     # we detect ninja in the setup script; ninja and plain ol' Visual Studio put the
     # build artifacts in different places.  Kind of annoying.  Maybe it would be better
     # to modify where ninja puts its artifacts?
-    objects.append('./nng/build/Release/nng.lib')
+    objects.append(f'./nng/{BUILD_PREFIX}/Release/nng.lib')
 
-    mbedtls_dir = './mbedtls/build/library/Release'
+    mbedtls_dir = f'./mbedtls/{BUILD_PREFIX}/library/Release'
     objects += [
         mbedtls_dir + "/mbedtls.lib",
         mbedtls_dir + "/mbedx509.lib",
