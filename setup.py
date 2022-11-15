@@ -100,7 +100,7 @@ def build_nng(cmake_args):
     if WINDOWS:
         # madness: for some reason in CI, a file that follows the Linux convention is
         # getting created
-        maybe_copy('nng/build/libnng.a', '/nng/build/nng.lib')
+        maybe_copy('nng/build/libnng.a', 'nng/build/nng.lib')
     print(os.listdir('nng/build'))
 
 
