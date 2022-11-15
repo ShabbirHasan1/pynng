@@ -15,13 +15,9 @@ if sys.platform == 'win32':
     # we detect ninja in the setup script; ninja and plain ol' Visual Studio put the
     # build artifacts in different places.  Kind of annoying.  Maybe it would be better
     # to modify where ninja puts its artifacts?
-    if shutil.which('ninja'):
-        objects.append('./nng/build/nng.lib')
-        mbedtls_dir = './mbedtls/build/library'
-    else:
-        objects.append('./nng/build/Release/nng.lib')
-        mbedtls_dir = './mbedtls/build/library/Release'
+    objects.append('./nng/build/Release/nng.lib')
 
+    mbedtls_dir = './mbedtls/build/library/Release'
     objects += [
         mbedtls_dir + "/mbedtls.lib",
         mbedtls_dir + "/mbedx509.lib",
