@@ -1,6 +1,5 @@
 import os
 from subprocess import check_call
-import platform
 import shutil
 import sys
 
@@ -121,19 +120,18 @@ def build_libs():
     flags = ['-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true']
     is_64bit = sys.maxsize > 2**32
     if WINDOWS:
-        if shutil.which('ninja'):
-            print('~~~building with ninja~~~')
-            flags += ['-G', 'Ninja']
+        print('~~~building without ninja~~~', file=sys.stderr)
+        if is_64bit:
+            flags += ['-A', 'x64']
         else:
-            if is_64bit:
-                flags += ['-A', 'x64']
-            else:
-                flags += ['-A', 'win32']
+            flags += ['-A', 'win32']
     else:
         if shutil.which('ninja'):
-            print('~~~building with ninja~~~')
+            print('~~~building with ninja~~~', file=sys.stderr)
             # the ninja build generator is a million times faster.
             flags += ['-G', 'Ninja']
+        else:
+            print('~~~building without ninja~~~', file=sys.stderr)
     build_mbedtls(flags)
     build_nng(flags)
 
