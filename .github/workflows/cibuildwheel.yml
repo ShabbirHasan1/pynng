@@ -6,7 +6,7 @@ jobs:
   build_wheels:
     env:
       # CIBW_BUILD: "cp39-* cp310-*"
-      CIBW_SKIP: "cp27-* cp35-* pp27-* pp36-win32 pp36-macosx_x86_64"
+      CIBW_SKIP: "cp27-* cp35-* pp27-* pp36-win32 pp36-macosx_x86_64 cp36-win32"
       CIBW_TEST_REQUIRES: pytest pytest-trio pytest-asyncio trio curio pytest-curio
       CIBW_TEST_COMMAND: pytest -v {project}/test
 
