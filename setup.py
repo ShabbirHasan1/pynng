@@ -26,14 +26,6 @@ NNG_REV = '4f5e11c391c4a8f1b2731aee5ad47bc0c925042a'
 MBEDTLS_REPO = 'https://github.com/ARMmbed/mbedtls.git'
 MBEDTLS_REV = '04a049bda1ceca48060b57bc4bcf5203ce591421'
 
-def _rmdir(dirname):
-    # we can't use shutil.rmtree because it won't delete readonly files.
-    if WINDOWS:
-        cmd = ['rmdir', '/q', '/s', dirname]
-    else:
-        cmd = ['rm', '-rf', dirname]
-    return check_call(cmd)
-
 def maybe_copy(src, dst):
     if os.path.exists(src):
         shutil.copy(src, dst)
@@ -81,7 +73,10 @@ def build_nng(cmake_args):
     """
     print("build_nng()")
     do = check_call
+    if WINDOWS:
+        do('tree', shell=True)
     if not os.path.exists('nng'):
+        print('git clone {}'.format(NNG_REPO))
         do('git clone {}'.format(NNG_REPO), shell=True)
         # for local hacking, just copy a directory (network connection is slow)
         # do('cp -r ../nng-clean nng', shell=True)
@@ -139,6 +134,7 @@ def build_libs():
 
 def build_nng_lib():
     print("build_nng_lib()")
+    print("")
     # cannot import build_pynng at the top level becuase cffi may not be
     # installed yet (since it is a dependency, and this script installs
     # dependencies).  Bootstrapping!
