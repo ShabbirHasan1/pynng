@@ -21,6 +21,7 @@ MBEDTLS_REPO = 'https://github.com/ARMmbed/mbedtls.git'
 MBEDTLS_REV = '04a049bda1ceca48060b57bc4bcf5203ce591421'
 
 def maybe_copy(src, dst):
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
     if os.path.exists(src):
         shutil.copy(src, dst)
 
@@ -53,11 +54,19 @@ def build_mbedtls(cmake_args):
         cwd=cwd,
     )
     if WINDOWS:
-        # CI build artifacts have the wrong extension
         mb = f'mbedtls/build/library/'
-        maybe_copy(mb + 'libmbedtls.a', mb + 'mbedtls.lib')
-        maybe_copy(mb + 'libmbedx509.a', mb + 'mbedx509.lib')
-        maybe_copy(mb + 'libmbedcrypto.a', mb + 'mbedcrypto.lib')
+        dst = f'mbedtls/build/library/Release/'
+
+        # CI build artifacts have the wrong extension when built with Ninja
+        maybe_copy(mb + 'libmbedtls.a', dst + 'mbedtls.lib')
+        maybe_copy(mb + 'libmbedx509.a', dst + 'mbedx509.lib')
+        maybe_copy(mb + 'libmbedcrypto.a', dst + 'mbedcrypto.lib')
+
+        # Move ninja stuff to Release directory, so it is where the build_pynng script
+        # expects.
+        maybe_copy(mb + 'mbedtls.lib', dst + 'mbedtls.lib')
+        maybe_copy(mb + 'mbedx509.lib', dst + 'mbedx509.lib')
+        maybe_copy(mb + 'mbedcrypto.lib', dst + 'mbedcrypto.lib')
 
 
 def build_nng(cmake_args):
@@ -94,7 +103,8 @@ def build_nng(cmake_args):
     if WINDOWS:
         # madness: for some reason in CI, a file that follows the Linux convention is
         # getting created (only when Ninja is the build generator)
-        maybe_copy(f'nng/build/libnng.a', 'nng/build/nng.lib')
+        maybe_copy(f'nng/build/libnng.a', 'nng/build/Release/nng.lib')
+        maybe_copy(f'nng/build/nng.lib', 'nng/build/Release/nng.lib')
 
 
 
@@ -111,12 +121,17 @@ def build_libs():
     flags = ['-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true']
     is_64bit = sys.maxsize > 2**32
     if WINDOWS:
-        if is_64bit:
-            flags += ['-A', 'x64']
+        if shutil.which('ninja'):
+            print('~~~building with ninja~~~')
+            flags += ['-G', 'Ninja']
         else:
-            flags += ['-A', 'win32']
+            if is_64bit:
+                flags += ['-A', 'x64']
+            else:
+                flags += ['-A', 'win32']
     else:
         if shutil.which('ninja'):
+            print('~~~building with ninja~~~')
             # the ninja build generator is a million times faster.
             flags += ['-G', 'Ninja']
     build_mbedtls(flags)

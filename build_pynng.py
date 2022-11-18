@@ -5,7 +5,6 @@
 # to see what the expected object file is based on the platform.
 from cffi import FFI
 import os
-import platform
 import sys
 
 WINDOWS = sys.platform == 'win32'
