@@ -9,12 +9,6 @@ import setuptools.command.build_ext
 
 WINDOWS = sys.platform == 'win32'
 
-if WINDOWS:
-    BUILD_PREFIX = f'build_{platform.machine()}_{platform.python_version()}'
-else:
-    BUILD_PREFIX = 'build'
-
-
 # have to exec; can't import the package before it's built.
 exec(open("pynng/_version.py", encoding="utf-8").read())
 
@@ -41,7 +35,7 @@ def build_mbedtls(cmake_args):
         # for local hacking, just copy a directory (network connection is slow)
         # do('cp -r ../mbedtls mbedtls', shell=True)
         do('git checkout {}'.format(MBEDTLS_REV), shell=True, cwd='mbedtls')
-    cwd = f'mbedtls/{BUILD_PREFIX}'
+    cwd = f'mbedtls/build'
     os.makedirs(cwd, exist_ok=True)
     cmake_cmd = ['cmake'] + cmake_args
     cmake_cmd += [
@@ -60,7 +54,7 @@ def build_mbedtls(cmake_args):
     )
     if WINDOWS:
         # CI build artifacts have the wrong extension
-        mb = f'mbedtls/{BUILD_PREFIX}/library/'
+        mb = f'mbedtls/build/library/'
         maybe_copy(mb + 'libmbedtls.a', mb + 'mbedtls.lib')
         maybe_copy(mb + 'libmbedx509.a', mb + 'mbedx509.lib')
         maybe_copy(mb + 'libmbedcrypto.a', mb + 'mbedcrypto.lib')
@@ -73,15 +67,13 @@ def build_nng(cmake_args):
     """
     print("build_nng()")
     do = check_call
-    if WINDOWS:
-        do('tree', shell=True)
     if not os.path.exists('nng'):
         print('git clone {}'.format(NNG_REPO))
         do('git clone {}'.format(NNG_REPO), shell=True)
         # for local hacking, just copy a directory (network connection is slow)
         # do('cp -r ../nng-clean nng', shell=True)
         do('git checkout {}'.format(NNG_REV), shell=True, cwd='nng')
-    nng_build_dir = f'nng/{BUILD_PREFIX}'
+    nng_build_dir = f'nng/build'
     os.makedirs(nng_build_dir, exist_ok=True)
     cmake_cmd = ['cmake'] + cmake_args
     cmake_cmd += [
@@ -101,9 +93,8 @@ def build_nng(cmake_args):
     )
     if WINDOWS:
         # madness: for some reason in CI, a file that follows the Linux convention is
-        # getting created
-        maybe_copy(f'nng/{BUILD_PREFIX}/libnng.a', 'nng/{BUILD_PREFIX}/nng.lib')
-    print(os.listdir(nng_build_dir))
+        # getting created (only when Ninja is the build generator)
+        maybe_copy(f'nng/build/libnng.a', 'nng/build/nng.lib')
 
 
 
@@ -134,7 +125,6 @@ def build_libs():
 
 def build_nng_lib():
     print("build_nng_lib()")
-    print("")
     # cannot import build_pynng at the top level becuase cffi may not be
     # installed yet (since it is a dependency, and this script installs
     # dependencies).  Bootstrapping!
