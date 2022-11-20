@@ -15,6 +15,7 @@ jobs:
       CIBW_ARCHS_MACOS: "universal2"
       CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET='10.9' CMAKE_OSX_ARCHITECTURES='x86_64;arm64'
       CIBW_BUILD_VERBOSITY: 1
+      CIBW_ARCHS_LINUX: auto aarch64
 
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
